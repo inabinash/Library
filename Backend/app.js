@@ -19,6 +19,12 @@ app.use("/v1", apiV1);
 
 //Requested URL doesn't start with /v1 hence path doesn't exist in server
 app.use((req,res)=>{
-  return res.send()
+  return res.status(404).send("Page not found");
 })
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Internal Server Error');
+});
+
 
