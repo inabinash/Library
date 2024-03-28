@@ -20,12 +20,13 @@ router.post('/login', async (req, res) => {
     const User= await UserModel.findOne({username: username,});
     // User not exist
     if(User===null){
-        return res.status(404).json(message :"User not found");
+        return res.status(404).json({message :"User not found"});
     }
     if(password!==User.password){
         return res.status(400).json({message :"Invalid Credentials"});
     }
     req.session.username = username;
+    req.session.role=User.role;
     return res.status(200).json({user:omitPassword(User)});
 
 })
