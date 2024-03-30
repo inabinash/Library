@@ -1,5 +1,5 @@
 const router = require("express")();
-const BookModel = require("../models/Book");
+const BookModel = require("../Models/Book");
 // get All book
 // get a specific book
 // update a book
@@ -8,7 +8,9 @@ const BookModel = require("../models/Book");
 
 router.get("/", async (req, res, next) => {
   try {
+    console.log("BookModel :",BookModel)
     const books = await BookModel.find({});
+    console.log("books :", books);
     return res.status(200).json(books);
   } catch (err) {
     next(err);

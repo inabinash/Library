@@ -1,5 +1,5 @@
 const { router: bookRouter } = require("./book")
-const { router: userRouter } = require("./users")
+const { router: userRouter } = require("./user")
 
 const apiV1 = require('express')();
 

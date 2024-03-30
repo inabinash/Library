@@ -15,7 +15,7 @@ const omitPassword =(user)=>{
 
 
 router.post('/login', async (req, res) => {
-    console.log(req);
+    // console.log("req object :", req);
     const {username, password} = req.body;
     const User= await UserModel.findOne({username: username,});
     // User not exist
@@ -27,6 +27,7 @@ router.post('/login', async (req, res) => {
     }
     req.session.username = username;
     req.session.role=User.role;
+    console.log("Session data saveed username role",req.session)
     return res.status(200).json({user:omitPassword(User)});
 
 })
@@ -36,6 +37,8 @@ router.get('/getProfile',async (req,res ,)=>{
 
         const username = req.session.username;
         const user= await UserModel.findOne({username: username});
+        console.log("Stored session Data  in get profile", req.session)
+
         if(user===null){
             return res.status(404).json({message:'User not Found'});
         }
@@ -51,6 +54,7 @@ router.get('/getProfile',async (req,res ,)=>{
 router.get('/logout' , (req, res , next)=>{
     try{
         req.session.destroy();
+        console.log(req.session);
         return res.status(204).json({message:'Logged out successfully'});
     }
     catch(err){
@@ -85,7 +89,7 @@ router.get('/borrow-books', (req, res, next)=>{
         next(err);
     }
 
-    // add User
+    
 
 })
 
