@@ -1,5 +1,6 @@
 const router = require("express")();
 const BookModel = require("../Models/Book");
+const { roles } = require("../utils/constants");
 // get All book
 // get a specific book
 // update a book
@@ -17,10 +18,10 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/:isbnId", async (req, res, next) => {
+router.get("/:isbn", async (req, res, next) => {
   try {
-    const { isbnId } = req.params;
-    const book = await BookModel.find({ isbnId: isbnId });
+    const { isbn } = req.params;
+    const book = await BookModel.find({ isbn: isbn });
     if (book === null) {
       return res.status(404).json({ message: "Book not found" });
     }
@@ -33,28 +34,29 @@ router.get("/:isbnId", async (req, res, next) => {
 router.patch("/update-book", async (req, res, next) => {
   try {
     const role = req.session.role;
-    if (role !== "admin") {
+    if (role !== roles.admin) {
       return res
         .status(401)
         .json({ message: "You haven't access for this action" });
     }
-    const { isbnId, ...rest } = req.body;
-    if (isbnId === null) {
+    const { isbn , ...rest} = req.body;
+    
+    if (isbn === null) {
       return res.status(404).json({ message: "Isbn Id is Mandatory" });
     }
-    var book = await BookModel.findOne({ isbnId: isbnId });
+    var book = await BookModel.findOne({ isbn: isbn });
     if (book === null) {
       return res.status(404).json({ message: "Book not found" });
     }
 
-    book = { ...book, ...rest };
-    return res.status(200).json(book);
+    const newBook = await BookModel.findOneAndUpdate({ isbn: isbn }, rest, { new: true });
+    return res.status(200).json(newBook);
   } catch (err) {
     next(err);
   }
 });
 
-router.delete("/delete-book/:isbnId", async (req, res, next) => {
+router.delete("/delete-book/:isbn", async (req, res, next) => {
   try {
     const role = req.session.role;
     if (role !== "admin") {
@@ -62,8 +64,8 @@ router.delete("/delete-book/:isbnId", async (req, res, next) => {
         .status(401)
         .json({ message: "You haven't access for this action" });
     }
-    const { isbnId } = req.params;
-    const result = await BookModel.deleteOne({ isbnId: isbnId });
+    const { isbn } = req.params;
+    const result = await BookModel.deleteOne({ isbn: isbn });
     if (result === null) {
       return res.status(404).json({ message: "Book not found" });
     }
@@ -83,12 +85,13 @@ router.post("/add-book", async (req, res, next) => {
         .status(401)
         .json({ message: "You haven't access for this action" });
     }
-    const { isbnId } = req.body;
-    const book = await BookModel.findOne({ isbnId: isbnId });
+    const { isbn } = req.body;
+    const book = await BookModel.findOne({ isbn: isbn });
     if (book != null) {
       return res.status(400).json({ message: "This book already exists" });
     }
     const createdBook = await BookModel.create(req.body);
+    return res.status(201).json({ createdBook: createdBook });
   } catch (err) {
     next(err);
   }

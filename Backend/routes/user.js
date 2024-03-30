@@ -1,7 +1,7 @@
 const router = require('express')();
 const UserModel = require('../Models/User')
 const BookModel = require('../Models/Book');
-
+const {roles} = require('../utils/constants');
 //getProfile
 //borrow book
 //return Book
@@ -62,20 +62,22 @@ router.get('/logout' , (req, res , next)=>{
     }
 });
 //Burrow Book
-router.get('/borrow-books', (req, res, next)=>{
+router.post('/borrow-books', (req, res, next)=>{
     //check if book exist
     //If exists check book is available 
     // Check if he has already borrowed that book 
     //if available update book quantity and borrowed by param
     try{
-        const {isbnId}= req.body;
-        const book = BookModel.find({isbn:isbnId});
-        const username = req.session.get('username');
+        const {isbn}= req.body;
+        console.log("isbn: ", isbn);
+        const book = BookModel.find({isbn:isbn});
+        // console.log("book: ", book);
+        const {username} = req.session.username;
         const user = BookModel.find({username: username});
         if(book===null){ // such book doesn't exist
             return res.status(404).json({message:"Book doesn't exist"});
         }
-        if(book.burrowedBy.includes(user)){
+        if(book.burrowedBy?.includes(user)){
             return res.status(400).json({message:'You have already borrowed that book'});
         }
         if(book.availableQunatity>0){
@@ -95,10 +97,10 @@ router.get('/borrow-books', (req, res, next)=>{
 
 router.post('/return', (req,res,next)=>{
     try{
-        const {isbnId}= req.body;
+        const {isbn}= req.body;
         const username = req.session.username
 
-        const book = BookModel.findOne({isbn:isbnId});
+        const book = BookModel.findOne({isbn:isbn});
         const user = UserModel.findOne({username:username});
 
         if(book===null){
@@ -111,7 +113,7 @@ router.post('/return', (req,res,next)=>{
         if(!book.borrowedBy.includes(user)){
             return res.status(400).json({message:'Book  not borrowed from user'});
         }
-
+        
         book.burrowedBy=book.burrowedBy.filter(obj=>obj.username!=username)
         book.availableQunatity=book.availableQunatity+1;
         book.save();
@@ -122,4 +124,24 @@ router.post('/return', (req,res,next)=>{
         next(err)
     }
 })
+
+router.post("/add-user", async (req, res, next) => {
+    try {
+      const role = req.session.role;
+      if (role !== roles.admin) {
+        return res
+          .status(401)
+          .json({ message: "You haven't access for this action" });
+      }
+      const { username } = req.body;
+      const user = await UserModel.findOne({ username: username });
+      if (user != null) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+      const newUser = await UserModel.create(req.body);
+      return res.status(201).json({ newUser: newUser });
+    } catch (err) {
+      next(err);
+    }
+  });
 module.exports ={router};
